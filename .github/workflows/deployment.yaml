@@ -1,0 +1,24 @@
+name: Kubernetes Deployment
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up kubectl
+      uses: Azure/setup-kubectl@v1
+      with:
+        version: 'v1.19.11'   
+
+    - name: Deploy Kubernetes Manifests
+      run: |
+        kubectl apply -f kubernetes/whoami-deployment.yaml
+        kubectl apply -f kubernetes/canary-deployment.yaml
+        kubectl apply -f kubernetes/whoami-service.yaml

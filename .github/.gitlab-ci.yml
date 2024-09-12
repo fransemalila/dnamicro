@@ -1,0 +1,11 @@
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  script:
+    - kubectl apply -f whoami-deployment.yaml
+    - kubectl apply -f canary-deployment.yaml
+    - kubectl apply -f whoami-service.yaml
+  only:
+    - master
