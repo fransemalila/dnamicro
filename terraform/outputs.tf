@@ -1,21 +1,29 @@
-# outputs.tf
-
 output "cluster_endpoint" {
-  description = "Kubernetes Cluster Endpoint"
+  description = "EKS cluster endpoint"
   value       = module.eks.cluster_endpoint
 }
 
-output "cluster_name" {
-  description = "Kubernetes Cluster Name"
-  value       = module.eks.cluster_name
+output "cluster_security_group_id" {
+  description = "EKS cluster security group ID"
+  value       = module.eks.cluster_security_group_id
 }
 
-output "kubeconfig" {
-  description = "EKS kubeconfig"
-  value       = module.eks.kubeconfig
+output "cluster_certificate_authority_data" {
+  description = "EKS cluster certificate authority data"
+  value       = module.eks.cluster_certificate_authority_data
+}
+
+output "cluster_id" {
+  description = "EKS cluster ID"
+  value       = module.eks.cluster_id
+}
+
+output "cluster_arn" {
+  description = "EKS cluster ARN"
+  value       = module.eks.cluster_arn
 }
 
 output "node_iam_role" {
-  description = "IAM role of the worker nodes"
-  value       = module.eks.node_groups["eks_nodes"].iam_role_arn
+  description = "IAM role ARN of the EKS worker node group"
+  value       = module.eks.eks_managed_node_groups["eks_nodes"].iam_role_arn
 }
