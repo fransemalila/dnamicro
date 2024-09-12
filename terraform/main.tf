@@ -1,9 +1,3 @@
-# main.tf
-
-provider "aws" {
-  region = "us-east-2" 
-}
-
 # EKS Cluster
 
 module "eks" {
