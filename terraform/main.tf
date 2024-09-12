@@ -1,25 +1,35 @@
+# main.tf
+
 provider "aws" {
-  region = var.aws_region
+  region = "us-east-2" 
 }
 
-resource "aws_eks_cluster" "example" {
-  name     = "example-cluster"
-  role_arn = aws_iam_role.eks_role.arn
+# EKS Cluster
 
-  vpc_config {
-    subnet_ids = aws_subnet.eks_subnet[*].id
+module "eks" {
+  source          = "terraform-aws-modules/eks/aws"
+  cluster_name    = "dnamicro"
+  cluster_version = "1.21"
+  subnets         = module.vpc.public_subnets
+  vpc_id          = module.vpc.vpc_id
+  node_groups = {
+    eks_nodes = {
+      desired_capacity = 2
+      max_capacity     = 3
+      min_capacity     = 1
+      instance_type    = "t3.medium"
+    }
   }
 }
 
-resource "aws_eks_node_group" "example_nodes" {
-  cluster_name    = aws_eks_cluster.example.name
-  node_group_name = "example_node_group"
-  node_role_arn   = aws_iam_role.eks_node_role.arn
-  subnet_ids      = aws_subnet.eks_subnet[*].id
+# VPC for EKS
 
-  scaling_config {
-    desired_size = 2
-    max_size     = 3
-    min_size     = 1
-  }
+module "vpc" {
+  source = "terraform-aws-modules/vpc/aws"
+  name   = "dnamicro-vpc"
+  cidr   = "10.0.0.0/16"
+
+  azs             = ["us-east-2a", "us-east-2b", "us-east-2c"]
+  public_subnets  = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+  private_subnets = ["10.0.11.0/24", "10.0.12.0/24", "10.0.13.0/24"]
 }

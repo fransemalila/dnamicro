@@ -1,9 +1,18 @@
-variable "aws_region" {
-  description = "AWS region"
-  default     = "us-west-2"
+provider "aws" {
+  region = "us-east-2"
 }
 
-variable "cluster_name" {
-  description = "Name of the EKS cluster"
-  default     = "example-cluster"
+module "eks" {
+  source          = "terraform-aws-modules/eks/aws"
+  cluster_name    = "eks-cluster"
+  cluster_version = "1.19"
+  subnets         = ["subnet-xxxx", "subnet-yyyy"]
+
+  node_groups = {
+    eks_nodes = {
+      desired_capacity = 3
+      max_capacity     = 4
+      min_capacity     = 2
+    }
+  }
 }
