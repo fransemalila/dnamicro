@@ -3,7 +3,9 @@ stages:
 
 deploy:
   stage: deploy
-  image: bitnami/kubectl:latest
   script:
-    - kubectl apply -f whoami-deployment.yaml
-    - kubectl apply -f canary-deployment.yaml
+    - aws eks --region us-east-2 update-kubeconfig --name dnamicro
+    - kubectl apply -f k8s/deployment.yaml
+    - kubectl apply -f k8s/service.yaml
+    - kubectl apply -f k8s/canary-deployment.yaml
+    - kubectl apply -f k8s/canary-service.yaml

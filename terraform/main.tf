@@ -1,34 +1,103 @@
-# EKS Cluster
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+}
 
-module "eks" {
-  source          = "terraform-aws-modules/eks/aws"
-  version         = "20.24.0"
-  
-  cluster_name    = "dnamicro"
-  cluster_version = "1.21"
-  vpc_id          = module.vpc.vpc_id
-  subnet_ids      = module.vpc.private_subnets  # Correct argument for subnets
+resource "aws_subnet" "subnet" {
+  count             = 2
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.0.${count.index}.0/24"
+  availability_zone = element(data.aws_availability_zones.available.names, count.index)
+}
 
-  # Managed node groups
-  eks_managed_node_groups = {
-    eks_nodes = {
-      desired_capacity = 3
-      max_capacity     = 4
-      min_capacity     = 2
-      instance_type    = "t3.medium"
-    }
+data "aws_eks_cluster" "dnamicro" {
+  name = aws_eks_cluster.dnamicro.name
+}
+
+data "aws_eks_cluster_auth" "dnamicro" {
+  name = aws_eks_cluster.dnamicro.name
+}
+
+resource "aws_eks_cluster" "dnamicro" {
+  name     = "dnamicro"
+  role_arn = aws_iam_role.eks_cluster_role.arn
+
+  vpc_config {
+    subnet_ids = aws_subnet.*.id
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.eks_cluster_AmazonEKSClusterPolicy,
+    aws_iam_role_policy_attachment.eks_cluster_AmazonEKSServicePolicy,
+  ]
+}
+
+resource "aws_iam_role" "eks_cluster_role" {
+  name = "eks-cluster-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "eks.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "eks_cluster_AmazonEKSClusterPolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+  role       = aws_iam_role.eks_cluster_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "eks_cluster_AmazonEKSServicePolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
+  role       = aws_iam_role.eks_cluster_role.name
+}
+
+resource "aws_eks_node_group" "dnamicro_node_group" {
+  cluster_name    = aws_eks_cluster.dnamicro.name
+  node_group_name = "dnamicro-node-group"
+  node_role_arn   = aws_iam_role.eks_node_role.arn
+  subnet_ids      = aws_subnet.*.id
+
+  scaling_config {
+    desired_size = 2
+    max_size     = 3
+    min_size     = 1
   }
 }
 
+resource "aws_iam_instance_profile" "eks_instance_profile" {
+  role = aws_iam_role.eks_node_role.name
+}
 
-# VPC for EKS
+resource "aws_iam_role" "eks_node_role" {
+  name = "eks-node-role"
 
-module "vpc" {
-  source = "terraform-aws-modules/vpc/aws"
-  name   = "dnamicro-vpc"
-  cidr   = "10.0.0.0/16"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
 
-  azs             = ["us-east-2a", "us-east-2b", "us-east-2c"]
-  public_subnets  = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  private_subnets = ["10.0.11.0/24", "10.0.12.0/24", "10.0.13.0/24"]
+resource "aws_iam_role_policy_attachment" "eks_node_AmazonEKSWorkerNodePolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+  role       = aws_iam_role.eks_node_role.name
+}
+
+resource "aws_iam_role_policy_attachment" "eks_node_AmazonEC2ContainerRegistryReadOnly" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  role       = aws_iam_role.eks_node_role.name
 }
