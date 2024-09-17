@@ -2,16 +2,16 @@
 
 ## Prerequisites
 
-- [Terraform](https://www.terraform.io/downloads.html) installed
-- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) configured
-- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) installed
+- Terraform
+- AWS CLI
+- kubectl
 
 ## Setup
 
 1. **Clone the repository**:
     ```bash
-    git clone https://github.com/yourusername/project-name.git
-    cd project-name
+    git clone https://github.com/fransemalila/dnamicro.git
+    cd dnamicro
     ```
 
 2. **Provision the Kubernetes cluster with Terraform**:
@@ -23,9 +23,10 @@
 
 3. **Deploy applications to the cluster**:
     ```bash
-    kubectl apply -f kubernetes/whoami-deployment.yaml
-    kubectl apply -f kubernetes/canary-deployment.yaml
-    kubectl apply -f kubernetes/whoami-service.yaml
+      kubectl apply -f kubernetes/whoami-deployment.yaml
+      kubectl apply -f kubernetes/whoami-service.yaml
+      kubectl apply -f kubernetes/canary-deployment.yaml
+      kubectl apply -f kubernetes/canary-service.yaml
     ```
 
 4. **Access the service**:
@@ -38,10 +39,10 @@
 ## CI/CD Pipeline
 
 This project includes:
-- A **GitHub Actions workflow** (`.github/workflows/deployment.yaml`) for continuous integration and deployment to the Kubernetes cluster.
-- An **optional GitLab CI/CD pipeline** (`.gitlab-ci.yml`) for performing the same task using GitLab runners.
+- A **GitHub Actions workflow** for continuous integration and deployment to the Kubernetes cluster.
+- An **optional GitLab CI/CD pipeline** for performing the same task using GitLab runners.
 
-Push changes to `main`, and the pipeline will automatically deploy the latest changes to your Kubernetes cluster.
+Push changes to `master`, and the pipeline will automatically deploy the latest changes to your Kubernetes cluster.
 
 ### Canary Deployment
 
@@ -52,3 +53,5 @@ A canary deployment is set up using the `whoami-canary` deployment with a single
 To delete the infrastructure provisioned by Terraform, run:
 ```bash
 terraform destroy
+```
+	
