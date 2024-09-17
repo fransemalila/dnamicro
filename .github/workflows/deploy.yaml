@@ -11,29 +11,43 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v1
+
+
+      - name: Cache kubectl
+        uses: actions/cache@v2
         with:
-          version: 'v1.21'
-          
+          path: /usr/local/bin/kubectl
+          key: kubectl-v1.21
+
+
+      - name: Install kubectl if not cached
+        run: |
+          if [ ! -f /usr/local/bin/kubectl ]; then
+            curl -LO "https://dl.k8s.io/release/v1.21.0/bin/linux/amd64/kubectl"
+            chmod +x kubectl
+            sudo mv kubectl /usr/local/bin/
+          fi
+
+      - name: Verify kubectl version
+        run: kubectl version --client
+
       - name: Install aws-iam-authenticator
         run: |
           curl -o aws-iam-authenticator https://amazon-eks.s3.us-west-2.amazonaws.com/1.18.9/2020-11-02/bin/linux/amd64/aws-iam-authenticator
           chmod +x ./aws-iam-authenticator
           sudo mv ./aws-iam-authenticator /usr/local/bin/
 
-      - name: Configure AWS credentials
+      - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: 'us-east-1'
 
-      - name: Update kubeconfig
+- name: Update kubeconfig
         run: aws eks update-kubeconfig --region us-east-1 --name dnamicro
 
-      - name: Deploy whoami and canary services
+      - name: Deploy to Kubernetes
         run: |
           kubectl apply -f kubernetes/whoami-deployment.yaml
           kubectl apply -f kubernetes/whoami-service.yaml
