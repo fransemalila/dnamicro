@@ -1,11 +1,18 @@
 stages:
   - deploy
 
-deploy:
+deploy_to_eks:
   stage: deploy
+  image: bitnami/kubectl:latest
+  before_script:
+    # Setting up AWS credentials for EKS
+    - export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+    - export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+    - aws eks --region us-east-1 update-kubeconfig --name dnamicro
   script:
-    - aws eks --region us-east-2 update-kubeconfig --name dnamicro
-    - kubectl apply -f k8s/deployment.yaml
-    - kubectl apply -f k8s/service.yaml
-    - kubectl apply -f k8s/canary-deployment.yaml
-    - kubectl apply -f k8s/canary-service.yaml
+    - kubectl apply -f kubernetes/whoami-deployment.yaml
+    - kubectl apply -f kubernetes/whoami-service.yaml
+    - kubectl apply -f kubernetes/canary-deployment.yaml
+    - kubectl apply -f kubernetes/canary-service.yaml
+  only:
+    - master
