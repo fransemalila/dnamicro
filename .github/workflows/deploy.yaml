@@ -12,10 +12,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v1
+
+      - name: Cache kubectl
+        uses: actions/cache@v2
         with:
-          version: 'v1.21'
+          path: /usr/local/bin/kubectl
+          key: kubectl-v1.21
+
+
+      - name: Install kubectl if not cached
+        run: |
+          if [ ! -f /usr/local/bin/kubectl ]; then
+            curl -LO "https://dl.k8s.io/release/v1.21.0/bin/linux/amd64/kubectl"
+            chmod +x kubectl
+            sudo mv kubectl /usr/local/bin/
+          fi
+
+      - name: Verify kubectl version
+        run: kubectl version --client
 
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v1
