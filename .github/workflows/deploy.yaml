@@ -44,7 +44,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: 'us-east-1'
 
-     - name: Update kubeconfig
+      - name: Update kubeconfig
         run: aws eks update-kubeconfig --region us-east-1 --name dnamicro
 
       - name: Deploy to Kubernetes
